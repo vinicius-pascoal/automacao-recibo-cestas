@@ -191,5 +191,3 @@ Contribuições são bem-vindas! Sinta-se à vontade para:
 Se encontrar problemas ou tiver dúvidas, abra uma issue no repositório.
 
 ---
-
-**Desenvolvido com ❤️ usando Next.js e TypeScript**
