@@ -38,9 +38,34 @@ export default function Home() {
     return valorDecimal.replace('.', ',')
   }
 
+  const formatCpfCnpj = (value: string) => {
+    // Remove tudo que não é dígito
+    const numbers = value.replace(/\D/g, '')
+
+    // CPF: 000.000.000-00
+    if (numbers.length <= 11) {
+      return numbers
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+    }
+
+    // CNPJ: 00.000.000/0000-00
+    return numbers
+      .replace(/(\d{2})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1/$2')
+      .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+  }
+
   const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCurrency(e.target.value)
     setFormData(prev => ({ ...prev, valor: formatted }))
+  }
+
+  const handleCpfCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCpfCnpj(e.target.value)
+    setFormData(prev => ({ ...prev, clienteCpf: formatted }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -109,17 +134,18 @@ export default function Home() {
 
             <div>
               <label htmlFor="clienteCpf" className="block text-sm font-medium text-gray-700 mb-2">
-                CPF do Cliente
+                CPF/CNPJ do Cliente
               </label>
               <input
                 type="text"
                 id="clienteCpf"
                 name="clienteCpf"
                 value={formData.clienteCpf}
-                onChange={handleChange}
+                onChange={handleCpfCnpjChange}
                 required
+                maxLength={18}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="000.000.000-00"
+                placeholder="CPF: 000.000.000-00 ou CNPJ: 00.000.000/0000-00"
               />
             </div>
 

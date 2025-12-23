@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import puppeteer from 'puppeteer'
 import { generateReciboHTML, ReciboData } from '@/lib/reciboTemplate'
+import fs from 'fs'
+import path from 'path'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,6 +19,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Converter logo para base64
+    let logoBase64: string | undefined
+    try {
+      const logoPath = path.join(process.cwd(), 'src', 'imgs', 'Cestaseafetos.jpg')
+      if (fs.existsSync(logoPath)) {
+        const logoBuffer = fs.readFileSync(logoPath)
+        logoBase64 = `data:image/jpeg;base64,${logoBuffer.toString('base64')}`
+      }
+    } catch (error) {
+      console.log('Logo não encontrada, continuando sem logo')
+    }
+
     // Dados do fornecedor do .env
     const reciboData: ReciboData = {
       clienteNome,
@@ -31,6 +45,7 @@ export async function POST(request: NextRequest) {
       fornecedorTelefone: process.env.FORNECEDOR_TELEFONE || '(00) 00000-0000',
       fornecedorEmail: process.env.FORNECEDOR_EMAIL || 'email@exemplo.com',
       fornecedorPix: process.env.FORNECEDOR_PIX || 'PIX não configurado',
+      logoBase64,
     }
 
     // Gerar HTML do recibo

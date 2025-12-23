@@ -11,6 +11,27 @@ export interface ReciboData {
   fornecedorTelefone: string
   fornecedorEmail: string
   fornecedorPix: string
+  logoBase64?: string
+}
+
+export function formatCpfCnpj(value: string): string {
+  // Remove tudo que não é dígito
+  const numbers = value.replace(/\D/g, '')
+
+  // CPF: 000.000.000-00
+  if (numbers.length <= 11) {
+    return numbers
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+  }
+
+  // CNPJ: 00.000.000/0000-00
+  return numbers
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1/$2')
+    .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
 }
 
 export function numberToWords(numero: number): string {
@@ -87,6 +108,13 @@ export function generateReciboHTML(data: ReciboData): string {
   const valorNumerico = parseFloat(data.valor.replace(',', '.'))
   const valorPorExtenso = numberToWords(valorNumerico)
 
+  // Formatar CPF/CNPJ para exibição
+  const clienteCpfCnpjFormatado = formatCpfCnpj(data.clienteCpf)
+  const fornecedorCpfFormatado = formatCpfCnpj(data.fornecedorCpf)
+
+  // Detectar se é CPF ou CNPJ
+  const tipoDocumentoCliente = data.clienteCpf.replace(/\D/g, '').length <= 11 ? 'CPF' : 'CNPJ'
+
   return `
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -115,8 +143,19 @@ export function generateReciboHTML(data: ReciboData): string {
     }
     
     .header {
+      position: relative;
       text-align: center;
       margin-bottom: 30px;
+      min-height: 80px;
+    }
+    
+    .logo {
+      position: absolute;
+      left: 0;
+      top: 0;
+      max-width: 120px;
+      max-height: 80px;
+      object-fit: contain;
     }
     
     .header h1 {
@@ -124,6 +163,7 @@ export function generateReciboHTML(data: ReciboData): string {
       font-weight: bold;
       margin-bottom: 10px;
       text-transform: uppercase;
+      padding-top: 10px;
     }
     
     .valor-header {
@@ -193,6 +233,7 @@ export function generateReciboHTML(data: ReciboData): string {
 <body>
   <div class="container">
     <div class="header">
+      ${data.logoBase64 ? `<img src="${data.logoBase64}" alt="Logo" class="logo" />` : ''}
       <h1>RECIBO</h1>
     </div>
     
@@ -203,7 +244,7 @@ export function generateReciboHTML(data: ReciboData): string {
     <div class="content">
       <p>
         Recebi de <strong>${data.clienteNome}</strong>, 
-        CPF nº <strong>${data.clienteCpf}</strong>, 
+        ${tipoDocumentoCliente} nº <strong>${clienteCpfCnpjFormatado}</strong>, 
         residente em <strong>${data.clienteEndereco}</strong>, 
         a quantia de <strong>R$ ${data.valor} (${valorPorExtenso})</strong> 
         referente a <strong>${data.descricao}</strong>.
@@ -212,7 +253,7 @@ export function generateReciboHTML(data: ReciboData): string {
       <div class="info-block">
         <strong>Dados do Fornecedor:</strong>
         Nome: ${data.fornecedorNome}<br>
-        CPF: ${data.fornecedorCpf}<br>
+        CPF: ${fornecedorCpfFormatado}<br>
         Endereço: ${data.fornecedorEndereco}<br>
         Telefone: ${data.fornecedorTelefone}<br>
         E-mail: ${data.fornecedorEmail}
@@ -222,10 +263,6 @@ export function generateReciboHTML(data: ReciboData): string {
         <strong>Informações de Pagamento:</strong>
         Chave PIX: ${data.fornecedorPix}
       </div>
-      
-      <p>
-        Para maior clareza, firmo o presente recibo para que produza os seus efeitos legais.
-      </p>
       
       <p style="text-align: right; margin-top: 30px;">
         Data: ${new Date(data.dataEmissao).toLocaleDateString('pt-BR')}
