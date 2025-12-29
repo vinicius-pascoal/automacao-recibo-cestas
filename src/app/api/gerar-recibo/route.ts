@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import puppeteer from 'puppeteer'
 import { generateReciboHTML, ReciboData } from '@/lib/reciboTemplate'
-import fs from 'fs'
 import path from 'path'
+import fs from 'fs/promises'
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,16 +20,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Converter logo para base64
-    let logoBase64: string | undefined
+    // Caminho absoluto da logo
+    const logoPath = path.join(process.cwd(), 'src', 'imgs', 'Cestaseafetos.jpg')
+    let logoBase64: string | undefined = undefined
     try {
-      const logoPath = path.join(process.cwd(), 'src', 'imgs', 'Cestaseafetos.jpg')
-      if (fs.existsSync(logoPath)) {
-        const logoBuffer = fs.readFileSync(logoPath)
-        logoBase64 = `data:image/jpeg;base64,${logoBuffer.toString('base64')}`
-      }
-    } catch (error) {
-      console.log('Logo não encontrada, continuando sem logo')
+      const logoBuffer = await fs.readFile(logoPath)
+      logoBase64 = `data:image/jpeg;base64,${logoBuffer.toString('base64')}`
+    } catch (e) {
+      console.warn('Logo não encontrada ou erro ao ler logo:', e)
     }
 
     // Dados do fornecedor do .env

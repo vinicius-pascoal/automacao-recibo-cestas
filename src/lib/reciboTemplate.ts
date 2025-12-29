@@ -265,15 +265,21 @@ export function generateReciboHTML(data: ReciboData): string {
       </div>
       
       <p style="text-align: right; margin-top: 30px;">
-        Data: ${new Date(data.dataEmissao).toLocaleDateString('pt-BR')}
+        Data: ${formatarDataLocal(data.dataEmissao)}
       </p>
-    </div>
-    
-    <div class="footer">
-      <p>Este documento possui validade legal conforme Art. 999 do Código Civil Brasileiro</p>
     </div>
   </div>
 </body>
 </html>
+
   `
+}
+
+// Função para converter yyyy-MM-dd para data local corretamente
+function formatarDataLocal(dataISO: string): string {
+  // dataISO esperado: yyyy-MM-dd
+  const [ano, mes, dia] = dataISO.split('-').map(Number)
+  if (!ano || !mes || !dia) return dataISO
+  const data = new Date(ano, mes - 1, dia)
+  return data.toLocaleDateString('pt-BR')
 }
